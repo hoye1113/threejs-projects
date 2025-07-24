@@ -1,20 +1,23 @@
 <template>
   <div class="main">
     <div id="mapContainer"></div>
-    <a-float-button-group shape="square" :style="{ left: '10px', top: '60px' }">
-      <a-float-button>
+    <a-float-button-group
+      shape="square"
+      :style="{ left: '20px', top: '160px' }"
+    >
+      <a-float-button @click="setTransformControlsMode('translate')">
         <template #icon>
           <DragOutlined />
         </template>
       </a-float-button>
 
-      <a-float-button>
+      <a-float-button @click="setTransformControlsMode('rotate')">
         <template #icon>
           <RetweetOutlined />
         </template>
       </a-float-button>
 
-      <a-float-button>
+      <a-float-button @click="setTransformControlsMode('scale')">
         <template #icon>
           <ArrowsAltOutlined />
         </template>
@@ -25,15 +28,18 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import Map from '@/map/init'
+import mapApp from '@/map/init'
 import {
   DragOutlined,
   RetweetOutlined,
   ArrowsAltOutlined
 } from '@ant-design/icons-vue'
+import { useThreeStore } from '@/store'
+
+const { setTransformControlsMode } = useThreeStore()
 
 onMounted(() => {
-  Map.init(document.getElementById('mapContainer'))
+  mapApp.init(document.getElementById('mapContainer'))
 })
 </script>
 

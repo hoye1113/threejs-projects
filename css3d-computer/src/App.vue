@@ -1,29 +1,28 @@
 <script setup>
 import MapBackground from './background/MapBackground.vue'
-import Map from '@/map/init.js';
-import { ref } from 'vue';
+import Map from '@/map/init.js'
+import { ref } from 'vue'
 
-const isShowBrowser = ref(false);
-
+const isShowBrowser = ref(false)
 </script>
 
 <template>
-   <MapBackground/>
-   <div id="desktop">
-    <img className="bg" src="@/assets/bg.png"/>
-    <div className='app' @click="isShowBrowser = true">
-      <div className='logo'></div>
-      <div className='name'>浏览器</div>
+  <MapBackground />
+  <div id="desktop">
+    <img className="bg" src="@/assets/bg.png" />
+    <div className="app" @click="isShowBrowser = true">
+      <div className="logo"></div>
+      <div className="name">浏览器</div>
     </div>
-    <iframe className='browser' src='https://sogou.com/' v-show="isShowBrowser"/>
-
-   </div>
-
-    
+    <iframe
+      className="browser"
+      src="https://sogou.com/"
+      v-show="isShowBrowser"
+    />
+  </div>
 </template>
 
 <style scoped>
-
 #desktop {
   width: 600px;
   height: 1100px;
@@ -44,7 +43,6 @@ const isShowBrowser = ref(false);
   rotate: -90deg;
 }
 
-
 #desktop .app {
   position: absolute;
   left: 50px;
@@ -53,10 +51,8 @@ const isShowBrowser = ref(false);
   height: 100px;
   rotate: -90deg;
   /* border: 1px solid blue; */
-
-
 }
-#desktop .app .logo{
+#desktop .app .logo {
   width: 50px;
   height: 50px;
   background: blue;
@@ -65,7 +61,7 @@ const isShowBrowser = ref(false);
   background-size: cover;
 }
 
-#desktop .app .name{
+#desktop .app .name {
   font-size: 30px;
   color: white;
 }
@@ -78,6 +74,4 @@ const isShowBrowser = ref(false);
   top: 250px;
   rotate: -90deg;
 }
-
-
 </style>

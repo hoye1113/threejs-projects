@@ -9,7 +9,6 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { GammaCorrectionShader } from 'three/addons/shaders/GammaCorrectionShader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
-
 class Map {
     constructor() {
         this.scene = null;
@@ -114,6 +113,9 @@ class Map {
 
         this.addTransformEvent();
 
+        const threeStore = useThreeStore();
+        threeStore.setScene(this.scene);
+        console.log('threeStore', threeStore);
     }
 
 
@@ -121,7 +123,7 @@ class Map {
         const threeStore = useThreeStore();
         threeStore.meshArr.forEach(item => {
             if (item.type === MeshTypes.Box) {
-                const { width, height, depth, material: { color }, position } = item.props;
+                const { width, height, depth, material: { color }, position, scale, rotation } = item.props;
                 let mesh = this.scene.getObjectByName(item.name);
 
                 if (!mesh) {
@@ -134,9 +136,14 @@ class Map {
 
                 mesh.name = item.name;
                 mesh.position.copy(position)
+                mesh.scale.copy(scale)
+                mesh.rotation.x = rotation.x;
+                mesh.rotation.y = rotation.y;
+                mesh.rotation.z = rotation.z;
+                mesh.material.color = new THREE.Color(color);
                 this.scene.add(mesh);
             } else if (item.type === MeshTypes.Cylinder) {
-                const { radiusTop, radiusBottom, height, material: { color }, position } = item.props;
+                const { radiusTop, radiusBottom, height, material: { color }, position, scale, rotation } = item.props;
                 let mesh = this.scene.getObjectByName(item.name);
 
                 if (!mesh) {
@@ -148,10 +155,15 @@ class Map {
                 }
                 mesh.name = item.name;
                 mesh.position.copy(position)
+                mesh.scale.copy(scale)
+                mesh.rotation.x = rotation.x;
+                mesh.rotation.y = rotation.y;
+                mesh.rotation.z = rotation.z;
+                mesh.material.color = new THREE.Color(color);
                 this.scene.add(mesh);
             }
         })
-
+        threeStore.setSceneChidrenLength(this.scene.children.length);
     }
 
     addClickEvent () {
@@ -171,6 +183,8 @@ class Map {
             const threeStore = useThreeStore();
             if (intersections.length) {
                 const obj = intersections[0].object;
+                console.log('click obj', obj);
+
                 //   obj.material.color.set('green');
                 this.outlinePass.selectedObjects = [obj];
                 threeStore.setSelectedObj(obj);
@@ -187,18 +201,19 @@ class Map {
     addKeyDownEvent () {
         window.addEventListener('keydown', (e) => {
             const threeStore = useThreeStore();
-            console.log(e.key, threeStore.selectedObj);
+            const selectedObj = threeStore.selectedObj;
             if (e.key === 'Backspace' && threeStore.selectedObj) {
-                const mesh = this.scene.getObjectByName(threeStore.selectedObj.name);
-                // console.log(mesh);
-                // 从场景中移除
-                this.scene.remove(mesh);
-                // 从store中移除
-                threeStore.removeMesh(threeStore.selectedObj.name);
-                // 清空outlinePass中的选中对象
-                this.outlinePass.selectedObjects = [];
                 // 清空store中的选中对象
                 threeStore.setSelectedObj(null);
+                const obj = this.scene.getObjectByName(selectedObj.name);
+                // 从场景中移除
+                this.scene.remove(obj);
+                // 从store中移除
+                threeStore.removeMesh(selectedObj.name);
+                // 清空outlinePass中的选中对象
+                this.outlinePass.selectedObjects = [];
+
+                this.renderMeshArr()
             }
         });
     }
@@ -207,14 +222,33 @@ class Map {
         this.transformControls.addEventListener('change', (e) => {
             const threeStore = useThreeStore();
             const obj = this.transformControls.object;
-            if (!obj) return
 
-            threeStore.updateMeshPosition(obj.name, obj.position);
+            if (obj && obj.isMesh) {
+                if (this.transformControls.mode === 'translate') {
+                    threeStore.updateMeshInfo(obj.name, obj.position, 'position');
+                } else if (this.transformControls.mode === 'scale') {
+                    threeStore.updateMeshInfo(obj.name, obj.scale, 'scale');
+                } else if (this.transformControls.mode === 'rotate') {
+                    threeStore.updateMeshInfo(obj.name, obj.rotation, 'rotation');
+                }
+            }
+
         })
 
         this.transformControls.addEventListener('dragging-changed', (e) => {
             this.orbitControls.enabled = !e.value;
         })
+    }
+
+    // 更改被选中操作的物体
+    transformControlsAttachObj (name) {
+        console.log(name);
+        const threeStore = useThreeStore();
+        const obj = this.scene.getObjectByName(name)
+        if (obj && obj.isMesh) {
+            this.transformControls.attach(obj)
+            threeStore.setSelectedObj(obj)
+        }
     }
 
 }

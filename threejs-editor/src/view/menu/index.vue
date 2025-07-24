@@ -14,7 +14,7 @@ import { ref } from 'vue'
 import { Menu } from 'ant-design-vue'
 import { MeshTypes, useThreeStore } from '@/store/index'
 const current = ref(['add'])
-const threeStore = useThreeStore()
+const { addMesh } = useThreeStore()
 
 const items = ref([
   {
@@ -43,7 +43,7 @@ const items = ref([
 
 const handleSelect = (item) => {
   if (MeshTypes[item.key]) {
-    threeStore.addMesh(MeshTypes[item.key])
+    addMesh(MeshTypes[item.key])
   }
 }
 </script>

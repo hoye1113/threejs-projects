@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import Map from "@/map/init";
+import mapApp from "@/map/init";
 
 export const useThreeStore = defineStore('threeStore', () => {
     // 使用ref定义响应式状态
@@ -13,37 +13,71 @@ export const useThreeStore = defineStore('threeStore', () => {
                 width: 100,
                 height: 200,
                 depth: 200,
+                geometry: {
+                    type: 'BoxGeometry',
+                },
                 material: {
-                    color: 'orange',
+                    type: 'MeshPhongMaterial',
+                    color: '#ffa500',
                 },
                 position: {
                     x: 0,
                     y: 0,
                     z: 0
+                },
+                scale: {
+                    x: 1,
+                    y: 1,
+                    z: 1
+                },
+                rotation: {
+                    x: 0,
+                    y: 0,
+                    z: 0
                 }
+
             }
         }
     ]);
+
+
+    // 存储场景对象
+    const scene = ref(null)
+    function setScene (obj) {
+        scene.value = obj;
+    }
+    const sceneChidrenLength = ref(0)
+    function setSceneChidrenLength (num) {
+        sceneChidrenLength.value = num;
+    }
+
+    // 添加变换控制器的模式
+    const transformControlsMode = ref('translate');
+    function setTransformControlsMode (newMode) {
+        transformControlsMode.value = newMode;
+        mapApp.transformControls.mode = newMode;
+    }
+
+    // 添加选中对象
     const selectedObj = ref(null);
     function setSelectedObj (newObj) {
-        selectedObj.value = newObj;
+        if (!newObj) {
+            mapApp.transformControls.detach()
+        }
+        selectedObj.value = newObj || null;
     }
-    const transformControlsModeRef = ref('translate');
-    function setTransformControlsMode (newMode) {
-        transformControlsModeRef.value = newMode;
-    }
+
+
     // 定义操作方法
     function addMesh (type) {
-        console.log('addMesh', type, Map);
         function addItem (creator) {
-            meshArr.value.push(creator());
-            console.log('meshArr', meshArr.value);
-            Map.renderMeshArr();
+            meshArr.value.push(creator);
+            mapApp.renderMeshArr();
         }
         if (type === 'Box') {
-            addItem(createBox);
+            addItem(createBox());
         } else if (type === 'Cylinder') {
-            addItem(createCylinder);
+            addItem(createCylinder());
         }
     }
     function removeMesh (name) {
@@ -51,14 +85,40 @@ export const useThreeStore = defineStore('threeStore', () => {
             return mesh.name !== name
         })
     }
-    function updateMeshPosition (name, position) {
+    function updateMeshInfo (name, info, type) {
         const mesh = meshArr.value.find(mesh => {
             return mesh.name === name
         })
-        if (mesh) {
-            mesh.props.position = position;
+        if (mesh.name === name) {
+            if (type === 'position') {
+                mesh.props.position = info;
+            } else if (type === 'scale') {
+                mesh.props.scale = info;
+            } else if (type === 'rotation') {
+                mesh.props.rotation = {
+                    x: info.x,
+                    y: info.y,
+                    z: info.z
+                }
+            }
         }
+
     }
+
+    function updateMaterial (name, info) {
+        this.meshArr.some(mesh => {
+            if (mesh.name === name) {
+                mesh.props.material = {
+                    ...mesh.props.material,
+                    ...info
+                }
+                mapApp.renderMeshArr();
+                return true;
+            }
+        })
+    }
+
+
     // 返回状态和方法
     return {
         meshArr,
@@ -66,9 +126,21 @@ export const useThreeStore = defineStore('threeStore', () => {
         setSelectedObj,
         selectedObj,
         removeMesh,
-        updateMeshPosition,
-        transformControlsModeRef,
-        setTransformControlsMode
+        updateMeshInfo,
+        transformControlsMode,
+        setTransformControlsMode,
+        scene,
+        setScene,
+        updateMaterial,
+        sceneChidrenLength,
+        setSceneChidrenLength
+    }
+}, {
+    // 配置持久化
+    persist: {
+        key: 'three-editor-store',
+        storage: localStorage,
+        paths: ['meshArr'] // 只持久化保存 meshArr
     }
 });
 
@@ -91,10 +163,24 @@ function createBox () {
             width: 200,
             height: 200,
             depth: 200,
+            geometry: {
+                type: 'BoxGeometry',
+            },
             material: {
-                color: 'orange',
+                type: 'MeshPhongMaterial',
+                color: '#ffa500',
             },
             position: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            scale: {
+                x: 1,
+                y: 1,
+                z: 1
+            },
+            rotation: {
                 x: 0,
                 y: 0,
                 z: 0
@@ -113,13 +199,27 @@ function createCylinder () {
             radiusTop: 200,
             radiusBottom: 200,
             height: 300,
+            geometry: {
+                type: 'CylinderGeometry',
+            },
             material: {
-                color: 'orange',
+                type: 'MeshPhongMaterial',
+                color: '#ffa500',
             },
             position: {
                 x: 0,
                 y: 0,
                 z: 0
+            },
+            rotation: {
+                x: 0,
+                y: 0,
+                z: 0
+            },
+            scale: {
+                x: 1,
+                y: 1,
+                z: 1
             }
         }
     }
